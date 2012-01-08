@@ -6,30 +6,14 @@ import JsonDSL._
 
 import java.util.Date
 
-trait ImplicitJsonVerbs {
-  /** Add JSON-processing method ># to dispatch.HandlerVerbs */
-  implicit def handlerToJsonVerbs(r: HandlerVerbs) =
-    new JsonHandlerVerbs(r)
-  implicit def requestToJsonVerbs(r: Request) =
-    new JsonHandlerVerbs(r)
-  implicit def stringToJsonVerbs(str: String) =
-    new JsonHandlerVerbs(new Request(str))
-  implicit def callbackToJsonVerbs(r: Request) =
-    new JsonCallbackVerbs(r)
+import com.ning.http.client.Response
+
+object As extends (Response => JValue) {
+  def apply(res: Response) = JsonParser.parse(dispatch.As.string(res))
+  val pretty = As.andThen(Js.prettyrender)
 }
-class JsonHandlerVerbs(subject: HandlerVerbs) {
-  /** Process response as JsValue in block */
-  def ># [T](block: JValue => T) = subject >> { (stm, charset) => 
-    block(JsonParser.parse(new java.io.InputStreamReader(stm, charset)))
-  }
-  def as_pretty = this ># { js => Js.prettyrender(js) }
-  /** Process streaming json messages, separated by newlines, in callbacks */
-}
-class JsonCallbackVerbs(subject: CallbackVerbs) {
-  def ^# [T](block: JValue => T) =
-    subject ^-- { s => block(JsonParser.parse(s)) }
-}
-object Js extends TypeMappers with ImplicitJsonVerbs {
+
+object Js extends TypeMappers {
   implicit def jvlistcomb[LT](block: JValue => List[LT]) = new JvListComb(block)
   class JvListComb[LT](block: JValue => List[LT]) {
     /** Synonym for Function1#andThen */
