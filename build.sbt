@@ -1,3 +1,5 @@
+name := "dispatch-lift-json"
+
 libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-json" % "2.4-RC1",
   "net.databinder.dispatch" %% "core" % "0.9.0-alpha1",
